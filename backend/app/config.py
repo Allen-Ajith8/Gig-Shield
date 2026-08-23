@@ -20,11 +20,12 @@ class Settings(BaseSettings):
     )
 
     # ── LLM Provider ────────────────────────────────────────
-    llm_provider: Literal["openai", "anthropic", "google"] = "openai"
+    llm_provider: Literal["openai", "anthropic", "google", "ollama"] = "ollama"
     openai_api_key: str = ""
     anthropic_api_key: str = ""
     google_api_key: str = ""
-    llm_model_name: str = "gpt-4o"
+    llm_model_name: str = "llama3"
+    ollama_base_url: str = "http://localhost:11434"
 
     # ── Application ─────────────────────────────────────────
     app_env: Literal["development", "production"] = "development"

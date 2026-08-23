@@ -64,6 +64,13 @@ def get_llm() -> BaseChatModel:
             google_api_key=settings.google_api_key,
             temperature=0.2,
         )
+    elif provider == "ollama":
+        from langchain_community.chat_models import ChatOllama
+        _llm_instance = ChatOllama(
+            model=model,
+            base_url=settings.ollama_base_url,
+            temperature=0.2,
+        )
     else:
         raise ValueError(f"Unsupported LLM provider: {provider}")
 
