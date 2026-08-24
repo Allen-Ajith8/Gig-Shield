@@ -1,17 +1,18 @@
 "use client"
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { Card } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
 import { FlaskConical, CheckCircle2, Clock, Brain, Activity } from "lucide-react"
+import { api } from "@/lib/api"
 
 export default function ExperimentsPage() {
-  const experiments = [
-    { id: "Exp 05", name: "Optimized Pipeline", model: "XGBoost", feats: "42 + 17 generated", pre: "SMOTE + Scaled", f1: "92%", auc: "96%", time: "18s", isBest: true },
-    { id: "Exp 04", name: "Synthetic + Feature Eng", model: "Random Forest", feats: "42 + 17 generated", pre: "SMOTE", f1: "89%", auc: "93%", time: "24s", isBest: false },
-    { id: "Exp 03", name: "Class Balancing", model: "XGBoost", feats: "42 original", pre: "SMOTE", f1: "86%", auc: "90%", time: "15s", isBest: false },
-    { id: "Exp 02", name: "Feature Engineering", model: "Logistic Reg", feats: "42 + 17 generated", pre: "Scaled", f1: "82%", auc: "86%", time: "4s", isBest: false },
-    { id: "Exp 01", name: "Baseline", model: "Logistic Reg", feats: "42 original", pre: "None", f1: "76%", auc: "80%", time: "2s", isBest: false },
-  ]
+  const [experiments, setExperiments] = useState([])
+
+  useEffect(() => {
+    api.getExperiments().then(res => setExperiments(res.runs)).catch(console.error)
+  }, [])
+
+  if (!experiments.length) return <div className="p-12 text-center text-slate-500">Loading Experiments...</div>
 
   return (
     <div className="space-y-6 pb-24">

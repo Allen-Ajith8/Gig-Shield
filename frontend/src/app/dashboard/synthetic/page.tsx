@@ -1,11 +1,20 @@
 "use client"
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { Card } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { Cpu, Database, CheckCircle2, SlidersHorizontal, Eye, Play } from "lucide-react"
+import { api } from "@/lib/api"
 
 export default function SyntheticDataPage() {
+  const [stats, setStats] = useState<any>(null)
+
+  useEffect(() => {
+    api.getSyntheticStats().then(setStats).catch(console.error)
+  }, [])
+
+  if (!stats) return <div className="p-12 text-center text-slate-500">Loading AI Data Generators...</div>
+
   return (
     <div className="space-y-6 pb-24">
       <div className="flex items-center justify-between">
@@ -30,32 +39,32 @@ export default function SyntheticDataPage() {
 
         <Card className="p-6 bg-brand-dark/10 backdrop-blur-xl border-brand-light/20 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-brand-light/20 blur-[50px] rounded-full pointer-events-none" />
-          <h3 className="text-sm font-bold text-brand-light tracking-wider mb-2 flex items-center gap-2 relative z-10">
+          <h3 className="text-sm font-bold text-[var(--brand-light)] tracking-wider mb-2 flex items-center gap-2 relative z-10">
             <Cpu size={16} /> SYNTHETIC DATASET
           </h3>
-          <div className="text-3xl font-black text-white mb-2 relative z-10">25,000</div>
-          <p className="text-xs text-brand-light/80 relative z-10">AI Generated records</p>
+          <div className="text-3xl font-black text-[var(--fg-base)] mb-2 relative z-10">{stats.current_job.records_generated.toLocaleString()}</div>
+          <p className="text-xs text-[var(--brand-light)]/80 relative z-10">AI Generated records</p>
         </Card>
 
-        <Card className="p-6 bg-black/40 backdrop-blur-xl border-white/5 flex flex-col justify-center">
+        <Card className="p-6 glass flex flex-col justify-center">
           <div className="text-sm text-slate-400 mb-1">Reason for Generation:</div>
-          <div className="text-lg font-bold text-white mb-4">"Class imbalance detected (8% positive)"</div>
+          <div className="text-lg font-bold text-[var(--fg-base)] mb-4">"Class imbalance detected (8% positive)"</div>
           <div className="flex gap-2">
-            <Badge variant="outline" className="border-brand-light/30 text-brand-light bg-brand-light/10">SMOTE</Badge>
-            <Badge variant="outline" className="border-white/10 text-slate-300">Target: churn=1</Badge>
+            <Badge variant="outline" className="border-[var(--brand-light)]/30 text-[var(--brand-light)] bg-[var(--brand-light)]/10">{stats.methods_available[0]}</Badge>
+            <Badge variant="outline" className="border-[var(--color-border)] text-slate-300">Target: churn=1</Badge>
           </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 p-6 bg-black/40 backdrop-blur-xl border-white/5">
+        <Card className="lg:col-span-2 p-6 glass">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-sm font-bold text-slate-300 tracking-wider">VALIDATION METRICS</h3>
             <Badge className="bg-emerald-500/10 text-emerald-400 border-none">PASSED</Badge>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white/5 p-4 rounded-lg border border-white/5 text-center">
-              <div className="text-2xl font-bold text-emerald-400 mb-1">94%</div>
+            <div className="bg-[var(--color-surface)] p-4 rounded-lg border border-[var(--color-border)] text-center">
+              <div className="text-2xl font-bold text-emerald-400 mb-1">{stats.current_job.fidelity_score}%</div>
               <div className="text-[10px] text-slate-400 uppercase tracking-wider">Distribution Sim</div>
             </div>
             <div className="bg-white/5 p-4 rounded-lg border border-white/5 text-center">

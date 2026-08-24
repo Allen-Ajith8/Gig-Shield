@@ -13,45 +13,47 @@ import { motion } from "framer-motion"
 
 const navGroups = [
   {
-    title: "CORE",
+    title: "START HERE",
     items: [
       { name: "Overview", href: "/dashboard", icon: Home },
+      { name: "1. Dataset Upload", href: "/dashboard/dataset", icon: Database },
     ]
   },
   {
-    title: "DATA WORKSPACE",
+    title: "2. DATA UNDERSTANDING",
     items: [
-      { name: "Dataset", href: "/dashboard/dataset", icon: Database },
-      { name: "Profiling", href: "/dashboard/profiling", icon: Search },
+      { name: "Data Profiling", href: "/dashboard/profiling", icon: Search },
       { name: "Data Dictionary", href: "/dashboard/dictionary", icon: BookType },
+    ]
+  },
+  {
+    title: "3. PREPARATION",
+    items: [
       { name: "Feature Engineering", href: "/dashboard/features", icon: Sparkles },
       { name: "Synthetic Data", href: "/dashboard/synthetic", icon: Cpu },
     ]
   },
   {
-    title: "AI WORKFORCE",
+    title: "4. AGENTIC WORKFLOW",
     items: [
-      { name: "Agents", href: "/dashboard/agents", icon: Bot },
-      { name: "Workflow", href: "/dashboard/workflow", icon: Workflow },
-      { name: "Communication", href: "/dashboard/communication", icon: Network },
+      { name: "Live Communication", href: "/dashboard/communication", icon: Network },
+      { name: "Workflow Graph", href: "/dashboard/workflow", icon: Workflow },
+      { name: "Agent Status", href: "/dashboard/agents", icon: Bot },
     ]
   },
   {
-    title: "INTELLIGENCE",
+    title: "5. MACHINE LEARNING",
     items: [
       { name: "ML Experiments", href: "/dashboard/experiments", icon: FlaskConical },
       { name: "Model Leaderboard", href: "/dashboard/models", icon: BarChart3 },
-      { name: "Predictions", href: "/dashboard/predictions", icon: Target },
-      { name: "What-If Simulator", href: "/dashboard/what-if", icon: SplitSquareHorizontal },
-      { name: "Insights", href: "/dashboard/insights", icon: Lightbulb },
     ]
   },
   {
-    title: "SYSTEM",
+    title: "6. RESULTS & INSIGHTS",
     items: [
-      { name: "AI Copilot", href: "/dashboard/copilot", icon: MessageSquare },
-      { name: "Versions", href: "/dashboard/versions", icon: History },
-      { name: "Audit Log", href: "/dashboard/audit", icon: ClipboardList },
+      { name: "Predictions", href: "/dashboard/predictions", icon: Target },
+      { name: "What-If Simulator", href: "/dashboard/what-if", icon: SplitSquareHorizontal },
+      { name: "Business Insights", href: "/dashboard/insights", icon: Lightbulb },
     ]
   }
 ]
@@ -60,7 +62,7 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="w-64 h-screen border-r border-white/5 bg-background/80 backdrop-blur-xl flex flex-col fixed left-0 top-0 z-50">
+    <div className="w-64 h-screen border-r-[var(--color-border)] glass flex flex-col fixed left-0 top-0 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.1)]">
       <div className="p-6">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-brand flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(45,212,191,0.5)]">
@@ -108,7 +110,7 @@ export function Sidebar() {
         ))}
       </div>
 
-      <div className="p-4 mt-auto border-t border-white/5 bg-background">
+      <div className="p-4 mt-auto border-t border-white/10 bg-transparent">
         <Link
           href="/dashboard/settings"
           className={cn(

@@ -8,11 +8,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [panelOpen, setPanelOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--fg-base)' }}>
+      {/* AMBIENT GLOWS FOR GLASSMORPHISM BACKGROUND */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full blur-[150px]" style={{ backgroundColor: 'var(--bg-glow-1)' }} />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full blur-[150px]" style={{ backgroundColor: 'var(--bg-glow-2)' }} />
+        <div className="absolute top-[20%] right-[20%] w-[40%] h-[40%] rounded-full blur-[120px]" style={{ backgroundColor: 'var(--bg-glow-3)' }} />
+      </div>
+
       <Sidebar />
-      <div className="pl-64">
+      <div className="pl-64 relative z-10">
         {/* TOP STATUS & COMMAND BAR */}
-        <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-white/5 px-8 py-4 flex flex-col gap-4">
+        <div className="sticky top-0 z-40 glass border-b border-b-[var(--color-border)] px-8 py-4 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="relative w-full max-w-2xl">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -76,7 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute bottom-full mb-3 left-0 w-64 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl"
+              className="absolute bottom-full mb-3 left-0 w-64 glass rounded-xl p-4 shadow-2xl"
             >
               <h4 className="text-xs font-bold text-slate-300 tracking-wider mb-3">AGENT ACTIVITY</h4>
               <div className="space-y-3">
@@ -103,7 +110,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         
         <button 
           onClick={() => setPanelOpen(!panelOpen)}
-          className="flex items-center gap-2 bg-[#09090b] border border-white/10 hover:border-brand-light/50 px-4 py-2 rounded-full shadow-lg transition-colors text-sm font-medium"
+          className="flex items-center gap-2 glass px-4 py-2 rounded-full shadow-lg transition-colors text-sm font-medium"
         >
           <Bot size={16} className="text-brand-light" />
           <span className="text-white">5 agents active</span>

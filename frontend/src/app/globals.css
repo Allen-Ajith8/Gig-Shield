@@ -1,28 +1,56 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #09090B; /* Zinc 950 */
-  --color-foreground: #FAFAFA;
-  
-  --color-brand-light: #2DD4BF; /* Teal 400 */
-  --color-brand-dark: #8B5CF6; /* Violet 500 */
-  
-  --color-surface: rgba(24, 24, 27, 0.4);
-  --color-surface-hover: rgba(39, 39, 42, 0.6);
-  --color-border: rgba(161, 161, 170, 0.1);
-  --color-border-hover: rgba(45, 212, 191, 0.3);
-  
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  --color-brand-light: var(--brand-light);
+  --color-brand-dark: var(--brand-dark);
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  --bg-base: #F8FAFC;
+  --fg-base: #0F172A;
+  
+  --brand-light: #0D9488; /* Teal 600 */
+  --brand-dark: #6D28D9; /* Violet 700 */
+  
+  --color-surface: rgba(255, 255, 255, 0.6);
+  --color-surface-hover: rgba(255, 255, 255, 0.8);
+  --color-border: rgba(0, 0, 0, 0.05);
+  --color-border-hover: rgba(0, 0, 0, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+
+  --bg-glow-1: rgba(225, 29, 72, 0.1);
+  --bg-glow-2: rgba(79, 70, 229, 0.1);
+  --bg-glow-3: rgba(8, 145, 178, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg-base: #07070a;
+    --fg-base: #F8FAFC;
+    
+    --brand-light: #2DD4BF; /* Teal 400 */
+    --brand-dark: #8B5CF6; /* Violet 500 */
+    
+    --color-surface: rgba(255, 255, 255, 0.03);
+    --color-surface-hover: rgba(255, 255, 255, 0.05);
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-border-hover: rgba(255, 255, 255, 0.15);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+
+    --bg-glow-1: rgba(225, 29, 72, 0.15);
+    --bg-glow-2: rgba(79, 70, 229, 0.15);
+    --bg-glow-3: rgba(8, 145, 178, 0.15);
+  }
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--bg-base);
+  color: var(--fg-base);
   font-family: var(--font-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -42,9 +70,10 @@ body {
 /* Glassmorphism utilities */
 .glass {
   background: var(--color-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--color-border);
+  box-shadow: var(--glass-shadow);
 }
 .glass:hover {
   border-color: var(--color-border-hover);

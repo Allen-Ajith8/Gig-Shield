@@ -1,19 +1,18 @@
 "use client"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Card } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { BookType, Bot, ShieldAlert, Sparkles } from "lucide-react"
+import { api } from "@/lib/api"
 
 export default function DataDictionaryPage() {
   const [selectedCol, setSelectedCol] = useState<any>(null)
+  const [columns, setColumns] = useState<any[]>([])
 
-  const columns = [
-    { name: "customer_id", type: "UUID", desc: "Unique identifier for the customer", example: "usr_123", missing: "0%", unique: "100%", ml: "Low", privacy: "High", conf: 99 },
-    { name: "age", type: "Numeric", desc: "Customer's age at registration", example: "34", missing: "0%", unique: "0.05%", ml: "High", privacy: "Low", conf: 95 },
-    { name: "monthly_spend", type: "Float", desc: "Average monthly spend in USD", example: "142.50", missing: "0%", unique: "89%", ml: "High", privacy: "Low", conf: 92 },
-    { name: "email", type: "String", desc: "Customer contact email address", example: "john@example.com", missing: "12%", unique: "88%", ml: "None", privacy: "Critical", conf: 99 },
-  ]
+  useEffect(() => {
+    api.getDictionary().then(res => setColumns(res.columns)).catch(console.error)
+  }, [])
 
   return (
     <div className="space-y-6 pb-24 h-full flex flex-col">

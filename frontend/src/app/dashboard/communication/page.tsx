@@ -1,21 +1,32 @@
 "use client"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Card } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { MessageSquare, Network, Brain, Database, Cpu, FlaskConical, Filter } from "lucide-react"
-
-const msgs = [
-  { time: "21:04:12", from: "Profiling Agent", to: "Master Agent", msg: "Class imbalance detected in target variable (8% positive).", color: "text-blue-400", bg: "bg-blue-400/10" },
-  { time: "21:04:14", from: "Master Agent", to: "Synthetic Data Agent", msg: "Generate minority-class samples to balance dataset.", color: "text-brand-light", bg: "bg-brand-light/10" },
-  { time: "21:04:31", from: "Synthetic Data Agent", to: "Validation Agent", msg: "5,000 synthetic records generated using SMOTE.", color: "text-brand-dark", bg: "bg-brand-dark/10" },
-  { time: "21:04:36", from: "Validation Agent", to: "Master Agent", msg: "Distribution similarity validated (94%). Ready for ML pipeline.", color: "text-emerald-400", bg: "bg-emerald-400/10" },
-  { time: "21:05:01", from: "Master Agent", to: "ML Strategy Agent", msg: "Initiating baseline model training.", color: "text-brand-light", bg: "bg-brand-light/10" },
-]
+import { agentWebSocket } from "@/lib/api"
 
 export default function CommunicationPage() {
   const [filter, setFilter] = useState("All")
+  const [msgs, setMsgs] = useState<any[]>([])
+
+  useEffect(() => {
+    agentWebSocket.connect()
+    const unsubscribe = agentWebSocket.subscribe((data) => {
+      if (data.type === 'agent_log') {
+        setMsgs(prev => [...prev, {
+          time: data.time,
+          from: data.agent,
+          to: "Network", // Simplified
+          msg: data.msg,
+          color: data.color,
+          bg: data.color.replace('text-', 'bg-').includes('400') ? data.color.replace('text-', 'bg-').replace('400', '500/10') : data.color.replace('text-', 'bg-') + '/10'
+        }])
+      }
+    })
+    return () => unsubscribe()
+  }, [])
   
   return (
     <div className="space-y-6 pb-24 h-[calc(100vh-8rem)] flex flex-col">

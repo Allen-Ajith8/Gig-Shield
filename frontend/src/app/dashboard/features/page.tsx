@@ -1,20 +1,23 @@
 "use client"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Card } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { Sparkles, Brain, Check, X, Eye } from "lucide-react"
+import { api } from "@/lib/api"
 
 export default function FeaturesPage() {
-  const [selectedFeature, setSelectedFeature] = useState("customer_frequency")
+  const [selectedFeature, setSelectedFeature] = useState<string | null>(null)
+  const [features, setFeatures] = useState<any[]>([])
 
-  const features = [
-    { name: "customer_frequency", source: "purchase_count / customer_age", imp: "High", status: "Accepted" },
-    { name: "avg_spend_30d", source: "sum(purchases_last_30d) / count", imp: "High", status: "Accepted" },
-    { name: "is_weekend_buyer", source: "mode(purchase_day) in [Sat, Sun]", imp: "Medium", status: "Accepted" },
-    { name: "has_support_tickets", source: "count(tickets) > 0", imp: "Medium", status: "Accepted" },
-    { name: "name_length", source: "len(first_name)", imp: "Low", status: "Removed" },
-  ]
+  useEffect(() => {
+    api.getFeatures().then(res => {
+      setFeatures(res.suggested_features)
+      if (res.suggested_features.length > 0) {
+        setSelectedFeature(res.suggested_features[0].name)
+      }
+    }).catch(console.error)
+  }, [])
 
   return (
     <div className="space-y-6 pb-24 h-full flex flex-col">
@@ -57,10 +60,10 @@ export default function FeaturesPage() {
                 {features.map(f => (
                   <tr key={f.name} onClick={() => setSelectedFeature(f.name)} className={`cursor-pointer transition-colors ${selectedFeature === f.name ? 'bg-brand-dark/10 border-l-2 border-brand-light' : 'hover:bg-white/[0.02]'}`}>
                     <td className="px-6 py-4 font-medium text-white">{f.name}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-400">{f.source}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate-400">{f.formula}</td>
                     <td className="px-6 py-4">
-                      {f.imp === "High" ? <span className="text-emerald-400 font-semibold">High</span> : 
-                       f.imp === "Medium" ? <span className="text-amber-400 font-semibold">Medium</span> : 
+                      {f.impact === "High" ? <span className="text-emerald-400 font-semibold">High</span> : 
+                       f.impact === "Medium" ? <span className="text-amber-400 font-semibold">Medium</span> : 
                        <span className="text-slate-500">Low</span>}
                     </td>
                     <td className="px-6 py-4">
