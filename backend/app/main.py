@@ -8,48 +8,60 @@ import os
 from services.data_manager import data_manager
 from services.agent_service import agent_service
 
-app = FastAPI(title="Agentic Data Intelligence API")
+from app.api.routes_approvals import router as approvals_router
+from app.api.routes_incidents import router as incidents_router
+from app.api.websocket import manager
+from app.config import settings
 
-# Allow CORS for frontend
+# ── Logging ─────────────────────────────────────────────────
+logging.basicConfig(
+    level=getattr(logging, settings.log_level.upper(), logging.INFO),
+    format="%(asctime)s %(levelname)-8s %(name)s  %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+# ── App ─────────────────────────────────────────────────────
+app = FastAPI(
+    title="Autonomous SRE Platform",
+    description="AI-native multi-agent incident resolution backend.",
+    version="1.0.0",
+)
+
+# ── CORS ────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
+# ── REST Routers ────────────────────────────────────────────
+app.include_router(incidents_router)
+app.include_router(approvals_router)
 
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+# ── WebSocket ───────────────────────────────────────────────
+@app.websocket("/ws/incidents/{incident_id}")
+async def websocket_endpoint(websocket: WebSocket, incident_id: str):
+    """
+    Subscribe to real-time events for a specific incident.
 
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
-
-manager = ConnectionManager()
-
-@app.get("/")
-def read_root():
-    return {"message": "Agentic Data Intelligence API is running"}
-
-@app.websocket("/ws/agent-logs")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
+    The frontend connects here immediately after triggering an incident
+    and receives structured JSON events until the incident is resolved
+    or the connection is closed.
+    """
+    await manager.connect(websocket, incident_id)
     try:
         while True:
-            # Just keeping the connection alive and listening for client messages if any
+            # Keep the connection alive; the client can also send messages
+            # (e.g., pings) which we silently consume.
             data = await websocket.receive_text()
-            await manager.broadcast(f"Client message: {data}")
+            logger.debug("WS received from client (%s): %s", incident_id, data)
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        await manager.disconnect(websocket, incident_id)
+    except Exception:
+        await manager.disconnect(websocket, incident_id)
 
 @app.post("/api/dataset/upload")
 async def upload_dataset(file: UploadFile = File(...)):
