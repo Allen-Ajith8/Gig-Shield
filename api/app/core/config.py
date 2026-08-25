@@ -3,10 +3,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "AgentIQ Backend"
-    database_url: str = "sqlite:///./agentiq.db"
-    upload_dir: str = "uploads"
-    models_dir: str = "models"
-    generated_dir: str = "generated"
+    database_url: str = "sqlite:////tmp/agentiq.db" if os.environ.get("VERCEL") else "sqlite:///./agentiq.db"
+    upload_dir: str = "/tmp/uploads" if os.environ.get("VERCEL") else "uploads"
+    models_dir: str = "/tmp/models" if os.environ.get("VERCEL") else "models"
+    generated_dir: str = "/tmp/generated" if os.environ.get("VERCEL") else "generated"
     
     # LLM Settings
     llm_provider: str = "ollama"

@@ -1,8 +1,10 @@
+import os
 from sqlalchemy import create_engine, Column, String, DateTime, Text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime, timezone
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./incidents.db"
+DB_PATH = "/tmp/incidents.db" if os.environ.get("VERCEL") else "./incidents.db"
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
