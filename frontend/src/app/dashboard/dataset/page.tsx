@@ -25,12 +25,12 @@ export default function DatasetCarousel() {
     animate: {
       opacity: 1,
       x: 0,
-      transition: { duration: 0.4, ease: "easeOut" }
+      transition: { duration: 0.4, ease: "easeOut" as any }
     },
     exit: (direction: number) => ({
       opacity: 0,
       x: direction > 0 ? -100 : 100,
-      transition: { duration: 0.3, ease: "easeIn" }
+      transition: { duration: 0.3, ease: "easeIn" as any }
     })
   }
 
@@ -165,7 +165,7 @@ export default function DatasetCarousel() {
                     className="absolute top-0 left-0 bottom-0 bg-gradient-brand rounded-full"
                     initial={{ width: "0%" }}
                     animate={{ width: "100%" }}
-                    transition={{ duration: 2.5, ease: "easeInOut" }}
+                    transition={{ duration: 2.5, ease: "easeInOut" as any }}
                   />
                 </div>
               </Card>

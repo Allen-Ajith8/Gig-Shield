@@ -9,6 +9,7 @@ Responsibilities:
 """
 
 from __future__ import annotations
+from langchain_core.runnables import RunnableConfig
 
 import json
 import logging
@@ -40,7 +41,7 @@ include any JSON or markdown formatting.
 """
 
 
-async def detective_node(state: IncidentState, config: Dict[str, Any]) -> Dict[str, Any]:
+async def detective_node(state: IncidentState, config: RunnableConfig) -> Dict[str, Any]:
     """Execute root-cause analysis and return state updates."""
     incident_id = state["incident_id"]
     alert = state["alert"]

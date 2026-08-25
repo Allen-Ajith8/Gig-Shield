@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { api } from '@/lib/api'
-import { Terminal, Shield, CheckCircle, XCircle, AlertTriangle, FileText, ArrowLeft } from 'lucide-react'
+import { Terminal, Shield, CheckCircle, XCircle, AlertTriangle, FileText, ArrowLeft, Workflow, Search } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 
@@ -92,8 +92,26 @@ export default function IncidentRoom() {
   const service = incident?.alert?.service || '—'
   const severity = incident?.alert?.severity || '—'
 
+  // Define SRE stages
+  const STAGES = [
+    { id: 'triage', label: 'Triage', icon: <AlertTriangle size={14} />, state: 'INVESTIGATING' },
+    { id: 'detective', label: 'Detective', icon: <Search size={14} />, state: 'INVESTIGATING' },
+    { id: 'remediation', label: 'Remediation', icon: <Shield size={14} />, state: 'REMEDIATING' },
+    { id: 'approval', label: 'Approval Gate', icon: <CheckCircle size={14} />, state: 'WAITING_APPROVAL' },
+    { id: 'execution', label: 'Execution', icon: <Terminal size={14} />, state: 'RESOLVED' }
+  ];
+
+  // Determine current stage index based on status and available data
+  let currentStageIdx = 0;
+  if (status === 'RESOLVED' || status === 'FAILED') currentStageIdx = 5;
+  else if (status === 'WAITING_APPROVAL') currentStageIdx = 3;
+  else if (status === 'REMEDIATING') currentStageIdx = 2;
+  else if (status === 'INVESTIGATING') {
+    currentStageIdx = incident?.root_cause ? 2 : (incident?.triage_summary ? 1 : 0);
+  }
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 pb-12">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -109,6 +127,50 @@ export default function IncidentRoom() {
           </div>
         </div>
       </div>
+
+      {/* Visual Pipeline */}
+      <Card className="p-6">
+        <h2 className="text-sm font-semibold text-[var(--fg-base)] mb-6 flex items-center gap-2">
+          <Workflow size={16} className="text-[var(--brand-light)]" />
+          Autonomous SRE Pipeline
+        </h2>
+        <div className="relative flex items-center justify-between max-w-4xl mx-auto px-4">
+          <div className="absolute left-4 right-4 top-1/2 h-0.5 bg-slate-800 -z-10 -translate-y-1/2" />
+          {STAGES.map((stage, idx) => {
+            const isCompleted = idx < currentStageIdx;
+            const isCurrent = idx === currentStageIdx;
+            const isFailed = status === 'FAILED' && isCurrent;
+
+            return (
+              <div key={stage.id} className="flex flex-col items-center gap-3 relative z-10">
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: isCurrent ? 1.1 : 1,
+                    backgroundColor: isFailed ? '#ef4444' : (isCompleted ? '#10b981' : (isCurrent ? '#8b5cf6' : '#1e293b')),
+                    borderColor: isCurrent && !isFailed ? '#a78bfa' : 'transparent'
+                  }}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-500 text-white shadow-lg`}
+                >
+                  {stage.icon}
+                </motion.div>
+                <div className="text-center">
+                  <div className={`text-xs font-semibold ${isCurrent ? 'text-white' : 'text-slate-400'}`}>
+                    {stage.label}
+                  </div>
+                  {isCurrent && (
+                    <motion.div
+                      layoutId="active-indicator"
+                      className="h-1 w-8 bg-[var(--brand-light)] rounded-full mx-auto mt-1"
+                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
 
       {/* Approval Banner */}
       {status === 'WAITING_APPROVAL' && (

@@ -17,7 +17,7 @@ export function HeroSection() {
         <motion.div 
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: "easeOut" as any }}
           className="flex flex-col gap-6"
         >
           <div>
@@ -53,7 +53,7 @@ export function HeroSection() {
             {/* Core */}
             <motion.div 
               animate={{ rotate: 360 }}
-              transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 40, repeat: Infinity, ease: "linear" as any }}
               className="relative w-64 h-64 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-sm shadow-[0_0_50px_rgba(59,130,246,0.2)]"
             >
               <div className="w-32 h-32 rounded-full bg-gradient-brand blur-[20px] opacity-50 animate-pulse" />
@@ -86,7 +86,7 @@ export function HeroSection() {
                 transition={{
                   duration: 20,
                   repeat: Infinity,
-                  ease: "linear",
+                  ease: "linear" as any,
                 }}
               />
             ))}

@@ -9,6 +9,7 @@ Responsibilities:
 """
 
 from __future__ import annotations
+from langchain_core.runnables import RunnableConfig
 
 import json
 import logging
@@ -43,7 +44,7 @@ Example:
 """
 
 
-async def remediation_node(state: IncidentState, config: Dict[str, Any]) -> Dict[str, Any]:
+async def remediation_node(state: IncidentState, config: RunnableConfig) -> Dict[str, Any]:
     """Formulate a fix, test it in sandbox, and decide on approval gate."""
     incident_id = state["incident_id"]
     alert = state["alert"]

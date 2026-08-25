@@ -8,6 +8,7 @@ Graph topology:
 """
 
 from __future__ import annotations
+from langchain_core.runnables import RunnableConfig
 
 import logging
 from datetime import datetime, timezone
@@ -88,7 +89,7 @@ def get_llm() -> BaseChatModel:
 # ── Approval Gate Node ──────────────────────────────────────
 
 
-async def approval_gate_node(state: IncidentState, config: Dict[str, Any]) -> Dict[str, Any]:
+async def approval_gate_node(state: IncidentState, config: RunnableConfig) -> Dict[str, Any]:
     """
     Checkpoint node that checks whether the workflow should pause
     for human approval.
@@ -123,7 +124,7 @@ async def approval_gate_node(state: IncidentState, config: Dict[str, Any]) -> Di
 # ── Execution & Post-Mortem Node ────────────────────────────
 
 
-async def execution_postmortem_node(state: IncidentState, config: Dict[str, Any]) -> Dict[str, Any]:
+async def execution_postmortem_node(state: IncidentState, config: RunnableConfig) -> Dict[str, Any]:
     """
     Final node: execute the approved action and generate a post-mortem.
     """

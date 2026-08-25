@@ -119,7 +119,7 @@ export function CinematicHero() {
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: phase >= 7 ? [1, 1.2, 1] : 1, opacity: 1 }}
-              transition={{ duration: phase >= 7 ? 4 : 1, repeat: phase >= 7 ? Infinity : 0, ease: "easeInOut" }}
+              transition={{ duration: phase >= 7 ? 4 : 1, repeat: phase >= 7 ? Infinity : 0, ease: "easeInOut" as any }}
               style={{ scale: centerScale, x: mouseX * 0.5, y: mouseY * 0.5 }}
               className="absolute w-2 h-2 rounded-full bg-[#2DD4BF] shadow-[0_0_20px_4px_rgba(45,212,191,0.6)] z-20"
             >
@@ -153,7 +153,7 @@ export function CinematicHero() {
                 <motion.div 
                   initial={{ scaleX: 0, opacity: 0 }}
                   animate={{ scaleX: 1, opacity: isHovered ? 0.8 : 0.2 }}
-                  transition={{ duration: 1.5, delay: i * 0.1, ease: "easeOut" }}
+                  transition={{ duration: 1.5, delay: i * 0.1, ease: "easeOut" as any }}
                   style={{ transformOrigin: "left", rotate: lineAngle, width: nodeDistance }}
                   className="absolute h-[1px] bg-gradient-to-r from-[#2DD4BF] to-transparent z-0"
                 />
@@ -166,7 +166,7 @@ export function CinematicHero() {
                       y: [0, ty],
                       opacity: [0, 1, 0]
                     }}
-                    transition={{ duration: 2 + Math.random() * 2, repeat: Infinity, delay: Math.random() * 2, ease: "easeInOut" }}
+                    transition={{ duration: 2 + Math.random() * 2, repeat: Infinity, delay: Math.random() * 2, ease: "easeInOut" as any }}
                     className="absolute w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_12px_#fff] z-10"
                   />
                 )}
@@ -234,7 +234,7 @@ export function CinematicHero() {
                 duration: p.duration, 
                 repeat: Infinity, 
                 delay: p.delay,
-                ease: "linear"
+                ease: "linear" as any
               }}
               style={{ x: mouseX * 1.5, y: mouseY * 1.5 }}
             />
@@ -260,7 +260,7 @@ export function CinematicHero() {
                       <motion.span
                         className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2DD4BF]/40 to-transparent bg-clip-text text-transparent"
                         animate={{ backgroundPosition: ["-200% 0", "200% 0"] }}
-                        transition={{ duration: 3, repeat: Infinity, repeatDelay: 5, ease: "linear" }}
+                        transition={{ duration: 3, repeat: Infinity, repeatDelay: 5, ease: "linear" as any }}
                       >
                         {char}
                       </motion.span>
@@ -277,7 +277,7 @@ export function CinematicHero() {
                 <motion.span 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1, ease: "easeOut" }}
+                  transition={{ duration: 1, ease: "easeOut" as any }}
                   className="text-white"
                 >
                   YOUR AUTONOMOUS
@@ -287,7 +287,7 @@ export function CinematicHero() {
                 <motion.span 
                   initial={{ opacity: 0, y: 10, filter: "blur(10px)" }}
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{ duration: 1, ease: "easeOut" }}
+                  transition={{ duration: 1, ease: "easeOut" as any }}
                   className="text-[#2DD4BF] drop-shadow-[0_0_15px_rgba(45,212,191,0.4)] mt-1"
                 >
                   DATA WORKFORCE

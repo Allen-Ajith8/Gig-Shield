@@ -9,6 +9,7 @@ Responsibilities:
 """
 
 from __future__ import annotations
+from langchain_core.runnables import RunnableConfig
 
 import json
 import logging
@@ -37,7 +38,7 @@ include any JSON or markdown formatting.
 """
 
 
-async def triage_node(state: IncidentState, config: Dict[str, Any]) -> Dict[str, Any]:
+async def triage_node(state: IncidentState, config: RunnableConfig) -> Dict[str, Any]:
     """Execute the triage step and return state updates."""
     incident_id: str = state["incident_id"]
     alert: Dict[str, Any] = state["alert"]
