@@ -6,19 +6,20 @@ Incident REST endpoints.
 - GET  /api/v1/incidents            → list all incidents
 """
 
-from __future__ import annotations
-
 import asyncio
+import json
 import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
 from app.agents.graph import compiled_graph
 from app.agents.state import IncidentState
 from app.api.websocket import manager
+from app.database import SessionLocal, DBIncident
+from app.limiter import limiter
 from app.models.schemas import (
     AlertPayload,
     IncidentResponse,
@@ -29,13 +30,70 @@ from app.models.schemas import (
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/incidents", tags=["incidents"])
 
-# ── In-memory incident store ────────────────────────────────
-# In production this would be a database. For this self-contained
-# demo we use a simple dict.
-_incidents: Dict[str, Dict[str, Any]] = {}
+
+# ── DB helpers ──────────────────────────────────────────────
+
+def _save_incident(incident_id: str, state: Dict[str, Any]):
+    """Persist an incident state to SQLite."""
+    db = SessionLocal()
+    try:
+        existing = db.query(DBIncident).filter(DBIncident.incident_id == incident_id).first()
+        if existing:
+            existing.status = state.get("status", "UNKNOWN")
+            existing.state_json = json.dumps(state, default=str)
+        else:
+            row = DBIncident(
+                incident_id=incident_id,
+                status=state.get("status", "INVESTIGATING"),
+                state_json=json.dumps(state, default=str),
+            )
+            db.add(row)
+        db.commit()
+    finally:
+        db.close()
 
 
-def get_incidents_store() -> Dict[str, Dict[str, Any]]:
+def _load_incident(incident_id: str) -> Dict[str, Any] | None:
+    """Load an incident state from SQLite."""
+    db = SessionLocal()
+    try:
+        row = db.query(DBIncident).filter(DBIncident.incident_id == incident_id).first()
+        if row:
+            return json.loads(row.state_json)
+        return None
+    finally:
+        db.close()
+
+
+def _load_all_incidents() -> list[Dict[str, Any]]:
+    """Load all incidents from SQLite."""
+    db = SessionLocal()
+    try:
+        rows = db.query(DBIncident).order_by(DBIncident.created_at).all()
+        return [json.loads(r.state_json) for r in rows]
+    finally:
+        db.close()
+
+
+from cachetools import LRUCache
+
+# ── In-memory cache (for fast access during workflow runs) ──
+# Using LRUCache to prevent infinite memory leak (OOM). 
+_incidents = LRUCache(maxsize=100)
+
+def _load_cache_from_db():
+    """Hydrate in-memory cache from DB on startup (only the last 100)."""
+    all_incidents = _load_all_incidents()
+    # Only load the most recent 100 to respect cache size
+    for state in all_incidents[-100:]:
+        iid = state.get("incident_id")
+        if iid:
+            _incidents[iid] = state
+
+# Hydrate cache immediately
+_load_cache_from_db()
+
+def get_incidents_store():
     """Expose the store so other modules (approvals) can access it."""
     return _incidents
 
@@ -50,6 +108,7 @@ async def _run_incident_workflow(incident_id: str, initial_state: Dict[str, Any]
         # LangGraph's ainvoke returns the final state dict
         final_state = await compiled_graph.ainvoke(initial_state)
         _incidents[incident_id].update(final_state)
+        _save_incident(incident_id, _incidents[incident_id])
         logger.info("Workflow completed for %s – status: %s",
                      incident_id, final_state.get("status"))
     except Exception as exc:
@@ -58,6 +117,7 @@ async def _run_incident_workflow(incident_id: str, initial_state: Dict[str, Any]
         _incidents[incident_id].setdefault("logs", []).append(
             f"[System] Workflow error: {exc}"
         )
+        _save_incident(incident_id, _incidents[incident_id])
         await manager.broadcast(incident_id, "ERROR", f"Workflow error: {exc}")
 
 
@@ -65,7 +125,8 @@ async def _run_incident_workflow(incident_id: str, initial_state: Dict[str, Any]
 
 
 @router.post("/trigger", response_model=IncidentTriggerResponse, status_code=202)
-async def trigger_incident(payload: AlertPayload, background_tasks: BackgroundTasks):
+@limiter.limit("3/minute")
+async def trigger_incident(request: Request, payload: AlertPayload, background_tasks: BackgroundTasks):
     """
     Ingest an alert and start the multi-agent resolution workflow
     as a background task.
@@ -91,6 +152,9 @@ async def trigger_incident(payload: AlertPayload, background_tasks: BackgroundTa
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
 
+    # Persist to DB immediately
+    _save_incident(incident_id, _incidents[incident_id])
+
     background_tasks.add_task(_run_incident_workflow, incident_id, initial_state)
 
     return IncidentTriggerResponse(incident_id=incident_id)
@@ -100,6 +164,11 @@ async def trigger_incident(payload: AlertPayload, background_tasks: BackgroundTa
 async def get_incident(incident_id: str):
     """Return the full current state of an incident."""
     state = _incidents.get(incident_id)
+    if not state:
+        # Try loading from DB (in case cache was cleared)
+        state = _load_incident(incident_id)
+        if state:
+            _incidents[incident_id] = state
     if not state:
         raise HTTPException(status_code=404, detail=f"Incident {incident_id} not found.")
     return IncidentResponse(
@@ -119,11 +188,11 @@ async def get_incident(incident_id: str):
 
 @router.get("", response_model=list[IncidentTriggerResponse])
 async def list_incidents():
-    """Return a summary list of all incidents."""
+    """Return a summary list of all incidents (from DB)."""
     return [
         IncidentTriggerResponse(
-            incident_id=iid,
+            incident_id=data["incident_id"],
             message=f"Status: {data.get('status', 'UNKNOWN')}",
         )
-        for iid, data in _incidents.items()
+        for data in _load_all_incidents()
     ]

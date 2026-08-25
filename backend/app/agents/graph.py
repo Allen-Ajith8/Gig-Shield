@@ -34,7 +34,7 @@ def get_llm() -> BaseChatModel:
     """
     Return a shared LLM instance configured from environment variables.
 
-    Supports OpenAI, Anthropic, and Google providers.
+    Supports NVIDIA NIM, OpenAI, Anthropic, Google, and Ollama providers.
     """
     global _llm_instance
     if _llm_instance is not None:
@@ -43,7 +43,15 @@ def get_llm() -> BaseChatModel:
     provider = settings.llm_provider
     model = settings.llm_model_name
 
-    if provider == "openai":
+    if provider == "nvidia":
+        from langchain_openai import ChatOpenAI
+        _llm_instance = ChatOpenAI(
+            model=model,
+            api_key=settings.nvidia_api_key,
+            base_url="https://integrate.api.nvidia.com/v1",
+            temperature=0.2,
+        )
+    elif provider == "openai":
         from langchain_openai import ChatOpenAI
         _llm_instance = ChatOpenAI(
             model=model,

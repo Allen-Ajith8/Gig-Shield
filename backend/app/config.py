@@ -20,11 +20,12 @@ class Settings(BaseSettings):
     )
 
     # ── LLM Provider ────────────────────────────────────────
-    llm_provider: Literal["openai", "anthropic", "google", "ollama"] = "ollama"
+    llm_provider: Literal["nvidia", "openai", "anthropic", "google", "ollama"] = "nvidia"
+    nvidia_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
     google_api_key: str = ""
-    llm_model_name: str = "llama3"
+    llm_model_name: str = "meta/llama-3.1-70b-instruct"
     ollama_base_url: str = "http://localhost:11434"
 
     # ── Application ─────────────────────────────────────────

@@ -2,77 +2,57 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { 
-  Home, Database, Search, BookType, Bot,
-  Workflow, Cpu, FlaskConical, Target,
-  MessageSquare, History, ClipboardList, Settings,
-  Sparkles, Network, BarChart3, LineChart, Lightbulb, SplitSquareHorizontal
-} from "lucide-react"
+import { Home, AlertTriangle, Shield, ChevronLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 
 const navGroups = [
   {
-    title: "START HERE",
+    title: "OVERVIEW",
     items: [
-      { name: "Overview", href: "/dashboard", icon: Home },
-      { name: "1. Dataset Upload", href: "/dashboard/dataset", icon: Database },
+      { name: "Dashboard", href: "/dashboard", icon: Home },
     ]
   },
   {
-    title: "2. DATA UNDERSTANDING",
+    title: "INCIDENT RESPONSE",
     items: [
-      { name: "Data Profiling", href: "/dashboard/profiling", icon: Search },
-      { name: "Data Dictionary", href: "/dashboard/dictionary", icon: BookType },
+      { name: "Incidents", href: "/dashboard/incidents", icon: AlertTriangle },
     ]
   },
-  {
-    title: "3. PREPARATION",
-    items: [
-      { name: "Feature Engineering", href: "/dashboard/features", icon: Sparkles },
-      { name: "Synthetic Data", href: "/dashboard/synthetic", icon: Cpu },
-    ]
-  },
-  {
-    title: "4. AGENTIC WORKFLOW",
-    items: [
-      { name: "Live Communication", href: "/dashboard/communication", icon: Network },
-      { name: "Workflow Graph", href: "/dashboard/workflow", icon: Workflow },
-      { name: "Agent Status", href: "/dashboard/agents", icon: Bot },
-    ]
-  },
-  {
-    title: "5. MACHINE LEARNING",
-    items: [
-      { name: "ML Experiments", href: "/dashboard/experiments", icon: FlaskConical },
-      { name: "Model Leaderboard", href: "/dashboard/models", icon: BarChart3 },
-    ]
-  },
-  {
-    title: "6. RESULTS & INSIGHTS",
-    items: [
-      { name: "Predictions", href: "/dashboard/predictions", icon: Target },
-      { name: "What-If Simulator", href: "/dashboard/what-if", icon: SplitSquareHorizontal },
-      { name: "Business Insights", href: "/dashboard/insights", icon: Lightbulb },
-    ]
-  }
 ]
 
-export function Sidebar() {
+export function Sidebar({ isOpen = true, setIsOpen }: { isOpen?: boolean, setIsOpen?: (v: boolean) => void }) {
   const pathname = usePathname()
 
   return (
-    <div className="w-64 h-screen border-r-[var(--color-border)] glass flex flex-col fixed left-0 top-0 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.1)]">
-      <div className="p-6">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-brand flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(45,212,191,0.5)]">
-            IQ
+    <div className={cn(
+      "w-64 h-screen border-r border-[var(--color-border)] flex flex-col fixed left-0 top-0 z-50 transition-transform duration-300",
+      isOpen ? "translate-x-0" : "-translate-x-full"
+    )} style={{ backgroundColor: 'var(--bg-base)' }}>
+      {/* Logo and Collapse Button */}
+      <div className="p-6 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-brand flex items-center justify-center">
+            <Shield size={16} className="text-white" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white">AgentIQ</span>
+          <div>
+            <span className="text-base font-bold text-[var(--fg-base)] block leading-tight">AgentIQ</span>
+            <span className="text-[10px] text-slate-500">Autonomous Data Workforce</span>
+          </div>
         </Link>
+        {setIsOpen && (
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="p-1.5 rounded-md text-slate-500 hover:text-slate-300 hover:bg-[var(--color-surface)] transition-colors"
+            title="Close sidebar"
+          >
+            <ChevronLeft size={18} />
+          </button>
+        )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-6 scrollbar-hide pb-20">
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-6">
         {navGroups.map((group) => (
           <div key={group.title}>
             <div className="text-[10px] font-bold tracking-wider text-slate-500 mb-2 px-3">
@@ -80,27 +60,29 @@ export function Sidebar() {
             </div>
             <div className="space-y-0.5">
               {group.items.map((item) => {
-                const isActive = pathname === item.href
-                
+                const isActive = item.href === "/dashboard"
+                  ? pathname === item.href
+                  : pathname?.startsWith(item.href) ?? false
+
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative group",
-                      isActive 
-                        ? "text-white" 
-                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative",
+                      isActive
+                        ? "text-[var(--fg-base)] bg-[var(--color-surface)]"
+                        : "text-slate-400 hover:text-[var(--fg-base)] hover:bg-[var(--color-surface-hover)]"
                     )}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="sidebar-active"
-                        className="absolute inset-0 bg-brand-dark/10 rounded-lg border border-brand-light/20 shadow-[0_0_10px_rgba(45,212,191,0.1)]"
+                        className="absolute inset-0 bg-[var(--brand-light)]/10 rounded-lg border border-[var(--brand-light)]/20"
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       />
                     )}
-                    <item.icon size={16} className={cn("relative z-10", isActive ? "text-brand-light" : "")} />
+                    <item.icon size={16} className={cn("relative z-10", isActive ? "text-[var(--brand-light)]" : "")} />
                     <span className="relative z-10">{item.name}</span>
                   </Link>
                 )
@@ -110,17 +92,12 @@ export function Sidebar() {
         ))}
       </div>
 
-      <div className="p-4 mt-auto border-t border-white/10 bg-transparent">
-        <Link
-          href="/dashboard/settings"
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative group text-slate-400 hover:text-white hover:bg-white/5",
-            pathname === "/dashboard/settings" && "text-white bg-white/5"
-          )}
-        >
-          <Settings size={18} />
-          <span>Settings</span>
-        </Link>
+      {/* Footer */}
+      <div className="p-4 border-t border-[var(--color-border)]">
+        <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500">
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>System Online</span>
+        </div>
       </div>
     </div>
   )

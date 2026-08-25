@@ -104,5 +104,43 @@ class ConnectionManager:
         )
 
 
-# ── Module-level singleton ──────────────────────────────────
+class GlobalConnectionManager:
+    """Manages global WebSocket connections (e.g., for dashboard agent logs)."""
+    
+    def __init__(self) -> None:
+        self.active_connections: List[WebSocket] = []
+        self._lock = asyncio.Lock()
+
+    async def connect(self, websocket: WebSocket) -> None:
+        await websocket.accept()
+        async with self._lock:
+            self.active_connections.append(websocket)
+        logger.info("Global WS connected")
+
+    async def disconnect(self, websocket: WebSocket) -> None:
+        async with self._lock:
+            if websocket in self.active_connections:
+                self.active_connections.remove(websocket)
+        logger.info("Global WS disconnected")
+
+    async def broadcast(self, message: str) -> None:
+        """Broadcast a raw string message to all global connections."""
+        async with self._lock:
+            conns = list(self.active_connections)
+        
+        dead: List[WebSocket] = []
+        for ws in conns:
+            try:
+                await ws.send_text(message)
+            except Exception:
+                dead.append(ws)
+                
+        if dead:
+            async with self._lock:
+                for ws in dead:
+                    if ws in self.active_connections:
+                        self.active_connections.remove(ws)
+
+# ── Module-level singletons ──────────────────────────────────
 manager = ConnectionManager()
+global_manager = GlobalConnectionManager()

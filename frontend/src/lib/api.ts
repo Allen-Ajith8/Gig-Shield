@@ -1,107 +1,86 @@
-const API_BASE = "http://localhost:8000/api";
-const WS_BASE = "ws://localhost:8000/ws";
+const API_BASE = 'http://localhost:8000';
+const WS_BASE = 'ws://localhost:8000';
 
 export const api = {
-  getStats: async () => {
-    const res = await fetch(`${API_BASE}/stats`);
-    if (!res.ok) throw new Error("Failed to fetch stats");
+  async triggerIncident(payload: {
+    service: string;
+    severity: string;
+    description: string;
+    raw_log: string;
+    metrics: object;
+    source: string;
+    scenario: string;
+  }) {
+    const res = await fetch(`${API_BASE}/api/v1/incidents/trigger`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`Failed to trigger incident: ${res.statusText}`);
     return res.json();
   },
-  
-  uploadDataset: async (file: File) => {
+
+  async getIncident(incidentId: string) {
+    const res = await fetch(`${API_BASE}/api/v1/incidents/${incidentId}`);
+    if (!res.ok) throw new Error(`Failed to get incident: ${res.statusText}`);
+    return res.json();
+  },
+
+  async listIncidents() {
+    const res = await fetch(`${API_BASE}/api/v1/incidents`);
+    if (!res.ok) throw new Error(`Failed to list incidents: ${res.statusText}`);
+    return res.json();
+  },
+
+  async submitApproval(
+    incidentId: string,
+    approved: boolean,
+    reviewer?: string,
+    comment?: string,
+  ) {
+    const res = await fetch(`${API_BASE}/api/v1/incidents/${incidentId}/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        approved,
+        reviewer: reviewer ?? '',
+        comment: comment ?? '',
+      }),
+    });
+    if (!res.ok) throw new Error(`Failed to submit approval: ${res.statusText}`);
+    return res.json();
+  },
+
+  async uploadDataset(file: File) {
     const formData = new FormData();
-    formData.append("file", file);
-    
-    const res = await fetch(`${API_BASE}/dataset/upload`, {
-      method: "POST",
+    formData.append('file', file);
+    const res = await fetch(`${API_BASE}/api/dataset/upload`, {
+      method: 'POST',
       body: formData,
     });
-    if (!res.ok) throw new Error("Failed to upload dataset");
+    if (!res.ok) throw new Error(`Failed to upload dataset: ${res.statusText}`);
     return res.json();
   },
-  
-  getDatasetPreview: async (datasetId: string) => {
-    const res = await fetch(`${API_BASE}/dataset/${datasetId}/preview`);
-    if (!res.ok) throw new Error("Failed to fetch dataset preview");
+
+  async getDatasetPreview(datasetId: string) {
+    const res = await fetch(`${API_BASE}/api/dataset/${datasetId}/preview`);
+    if (!res.ok) throw new Error(`Failed to get dataset preview: ${res.statusText}`);
     return res.json();
   },
-  
-  startWorkflow: async (goal: string, datasetId: string) => {
-    const res = await fetch(`${API_BASE}/workflow/start`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ goal, dataset_id: datasetId }),
+
+  async analyzeDataset(datasetId: string) {
+    const res = await fetch(`${API_BASE}/api/dataset/${datasetId}/analyze`, {
+      method: 'POST'
     });
-    if (!res.ok) throw new Error("Failed to start workflow");
+    if (!res.ok) throw new Error(`Failed to analyze dataset: ${res.statusText}`);
     return res.json();
   },
-  
-  getDictionary: async () => {
-    const res = await fetch(`${API_BASE}/dictionary`);
-    return res.json();
-  },
-  
-  getFeatures: async () => {
-    const res = await fetch(`${API_BASE}/features`);
-    return res.json();
-  },
-  
-  getSyntheticStats: async () => {
-    const res = await fetch(`${API_BASE}/synthetic`);
-    return res.json();
-  },
-  
-  getExperiments: async () => {
-    const res = await fetch(`${API_BASE}/experiments`);
-    return res.json();
-  },
-  
-  getPredictions: async () => {
-    const res = await fetch(`${API_BASE}/predictions`);
-    return res.json();
+
+  getDownloadUrl(datasetId: string) {
+    return `${API_BASE}/api/dataset/${datasetId}/download`;
   }
 };
 
-// WebSocket singleton
-class AgentLogsWebSocket {
-  private ws: WebSocket | null = null;
-  private listeners: Set<(data: any) => void> = new Set();
-  
-  connect() {
-    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
-      return;
-    }
-    
-    this.ws = new WebSocket(`${WS_BASE}/agent-logs`);
-    
-    this.ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        this.listeners.forEach(listener => listener(data));
-      } catch (e) {
-        console.error("Failed to parse websocket message", e);
-      }
-    };
-    
-    this.ws.onclose = () => {
-      console.log("WebSocket disconnected. Reconnecting in 3s...");
-      setTimeout(() => this.connect(), 3000);
-    };
-  }
-  
-  subscribe(callback: (data: any) => void) {
-    this.listeners.add(callback);
-    return () => this.listeners.delete(callback);
-  }
-  
-  disconnect() {
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
-  }
+export function connectIncidentWebSocket(incidentId: string): WebSocket {
+  return new WebSocket(`${WS_BASE}/ws/incidents/${incidentId}`);
 }
-
-export const agentWebSocket = new AgentLogsWebSocket();

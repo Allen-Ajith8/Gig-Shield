@@ -1,3 +1,4 @@
+import re
 import polars as pl
 import duckdb
 import os
@@ -12,17 +13,22 @@ class DataManager:
 
     def load_dataset_from_bytes(self, file_bytes: bytes, filename: str) -> Dict[str, Any]:
         """Loads a dataset from bytes, saves it, and returns metadata."""
-        dataset_id = filename.split('.')[0]
+        # Sanitize filename to prevent path traversal
+        safe_filename = re.sub(r'[^a-zA-Z0-9_.-]', '', os.path.basename(filename))
+        if not safe_filename:
+            safe_filename = "dataset.csv"
+            
+        dataset_id = safe_filename.split('.')[0]
         
         # Save temporary file to read with polars
-        temp_path = os.path.join(self.storage_dir, filename)
+        temp_path = os.path.join(self.storage_dir, safe_filename)
         with open(temp_path, "wb") as f:
             f.write(file_bytes)
             
         try:
-            if filename.endswith('.csv'):
+            if safe_filename.endswith('.csv'):
                 df = pl.read_csv(temp_path)
-            elif filename.endswith('.parquet'):
+            elif safe_filename.endswith('.parquet'):
                 df = pl.read_parquet(temp_path)
             else:
                 raise ValueError("Unsupported file format. Use CSV or Parquet.")
