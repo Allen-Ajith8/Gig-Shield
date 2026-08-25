@@ -51,7 +51,8 @@ export default function IncidentRoom() {
 
   // WebSocket for live logs
   useEffect(() => {
-    const ws = new WebSocket(`ws://localhost:8000/ws/incidents/${id}`)
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+    const ws = new WebSocket(`${wsUrl}/ws/incidents/${id}`)
     ws.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data)
