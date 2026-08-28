@@ -78,9 +78,21 @@ export const api = {
 
   getDownloadUrl(datasetId: string) {
     return `${API_BASE}/api/dataset/${datasetId}/download`;
+  },
+
+  async startDatasetPipeline(datasetId: string) {
+    const res = await fetch(`${API_BASE}/api/dataset/${datasetId}/pipeline/start`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error(`Failed to start pipeline: ${res.statusText}`);
+    return res.json();
   }
 };
 
 export function connectIncidentWebSocket(incidentId: string): WebSocket {
   return new WebSocket(`${WS_BASE}/ws/incidents/${incidentId}`);
+}
+
+export function connectDatasetWebSocket(datasetId: string): WebSocket {
+  return new WebSocket(`${WS_BASE}/ws/dataset/${datasetId}`);
 }

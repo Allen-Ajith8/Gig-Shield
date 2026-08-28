@@ -178,6 +178,90 @@ async def download_dataset(dataset_id: str):
     return FileResponse(path=file_path, filename=f"{dataset_id}_cleaned.csv", media_type='text/csv')
 
 
+import asyncio
+import random
+
+@app.websocket("/ws/dataset/{dataset_id}")
+async def dataset_websocket_endpoint(websocket: WebSocket, dataset_id: str):
+    await manager.connect(websocket, dataset_id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            logger.debug("WS received from client (%s): %s", dataset_id, data)
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket, dataset_id)
+    except Exception:
+        await manager.disconnect(websocket, dataset_id)
+
+async def simulate_pipeline(dataset_id: str):
+    stages = [
+        {"id": "dataset", "name": "Dataset", "agent": "DatasetAgent"},
+        {"id": "profiling", "name": "Profiling", "agent": "ProfilingAgent"},
+        {"id": "dictionary", "name": "Data Dictionary", "agent": "DictionaryAgent"},
+        {"id": "quality", "name": "Quality", "agent": "DataQualityAgent"},
+        {"id": "cleaning", "name": "Cleaning", "agent": "CleaningAgent"},
+        {"id": "transformation", "name": "Transformation", "agent": "TransformAgent"},
+        {"id": "feature_engineering", "name": "Feature Engineering", "agent": "FeatureAgent"},
+        {"id": "synthetic_data", "name": "Synthetic Data", "agent": "SyntheticDataAgent"},
+        {"id": "model_strategy", "name": "Model Strategy", "agent": "ModelStrategyAgent"},
+        {"id": "model_selection", "name": "Model Selection", "agent": "ModelSelectionAgent"},
+        {"id": "training", "name": "Training", "agent": "TrainingAgent"},
+        {"id": "validation", "name": "Validation", "agent": "ValidationAgent"},
+        {"id": "prediction", "name": "Prediction", "agent": "PredictionAgent"},
+        {"id": "final_model", "name": "Final Model", "agent": "MasterAgent"},
+    ]
+    
+    # Send pipeline initialization
+    await manager.broadcast(
+        dataset_id, "PIPELINE_INIT", "Initializing Live Processing Pipeline", 
+        "Orchestrator", {"stages": stages}
+    )
+    
+    for stage in stages:
+        agent = stage["agent"]
+        await manager.broadcast_status(dataset_id, "RUNNING", agent)
+        await manager.broadcast(dataset_id, "AGENT_STEP", f"{stage['name']} starting analysis...", agent)
+        
+        # Simulate work
+        work_time = random.uniform(1.0, 3.0)
+        steps = int(work_time * 2)
+        for i in range(steps):
+            await asyncio.sleep(0.5)
+            await manager.broadcast_log(dataset_id, f"Processing data chunk {i+1}/{steps}...", agent)
+            
+        # Simulate some data payload for specific stages
+        data_payload = {}
+        if stage["id"] == "model_selection":
+            data_payload = {
+                "winner": "XGBoost",
+                "models": [
+                    {"name": "XGBoost", "score": 0.92},
+                    {"name": "Random Forest", "score": 0.89},
+                    {"name": "Logistic Regression", "score": 0.81}
+                ]
+            }
+        elif stage["id"] == "training":
+            data_payload = {"metrics": {"accuracy": 0.93, "loss": 0.15}}
+            
+        await manager.broadcast_status(dataset_id, "COMPLETED", agent)
+        await manager.broadcast(
+            dataset_id, "AGENT_STEP", f"{stage['name']} completed successfully.", 
+            agent, data_payload
+        )
+        await asyncio.sleep(0.5)
+
+    await manager.broadcast(dataset_id, "PIPELINE_COMPLETE", "Processing complete", "Orchestrator", {})
+
+@app.post("/api/dataset/{dataset_id}/pipeline/start")
+@limiter.limit("5/minute")
+async def start_dataset_pipeline(request: Request, dataset_id: str, background_tasks: BackgroundTasks):
+    df = data_manager.load_version(dataset_id)
+    if df is None:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+        
+    background_tasks.add_task(simulate_pipeline, dataset_id)
+    return {"status": "started", "dataset_id": dataset_id}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
